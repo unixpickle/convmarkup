@@ -180,6 +180,7 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Residual {\nConv(w=1, h=1, n=5)\n}",
 		input + "Residual {\nProjection {\nConv(w=1, h=1, n=5)\n}\nConv(w=1, h=1, n=3)\n}",
 		input + "Residual {\nProjection {\n\n}\nConv(w=1, h=1, n=3)\n}",
+		input + "FC",
 	}
 	for i, x := range invalid {
 		parsed, err := Parse(x)
