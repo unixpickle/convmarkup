@@ -38,6 +38,7 @@ func DefaultCreators() map[string]Creator {
 		"Padding":    CreatePadding,
 		"Residual":   CreateResidual,
 		"Projection": CreateProjection,
+		"FC":         CreateFC,
 		"BatchNorm":  ActivationCreator("BatchNorm"),
 		"ReLU":       ActivationCreator("ReLU"),
 		"Softmax":    ActivationCreator("Softmax"),
@@ -323,6 +324,36 @@ func (p *Projection) Type() string {
 // contents of a Residual.
 func (p *Projection) OutDims() Dims {
 	return p.In
+}
+
+// FC is a fully-connected layer.
+type FC struct {
+	InCount  int
+	OutCount int
+}
+
+// CreateFC creates an *FC block.
+func CreateFC(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if len(children) != 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	if err := hasAllAndOnlyInts(attr, 1, "out"); err != nil {
+		return nil, err
+	}
+	return &FC{
+		InCount:  int(in.Width * in.Height * in.Depth),
+		OutCount: int(attr["out"]),
+	}, nil
+}
+
+// Type returns "FC".
+func (f *FC) Type() string {
+	return "FC"
+}
+
+// OutDims returns the output dimensions.
+func (f *FC) OutDims() Dims {
+	return Dims{Width: 1, Height: 1, Depth: f.OutCount}
 }
 
 // Activation is any block with no attributes.

@@ -96,7 +96,7 @@
 //     }
 //
 // The FC block defines a fully-connected layer.
-// It has two attributes: in and out, which determine the
-// input and output count.
+// It has one attributes: "out", which determines the
+// output count.
 // The output tensor of an FC has a width and height of 1.
 package convmarkup
