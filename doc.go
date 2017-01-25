@@ -3,7 +3,14 @@
 //
 // Format overview
 //
-// Everything in the markup language is a block.
+// This format is line-based, meaning that newlines have
+// syntactic significance.
+// Lines beginning with a # are treated as comments.
+// Empty lines are ignored.
+// Every other line either declares a block or closes one.
+//
+// Everything in the markup language (except for comments)
+// is a block.
 // A block has a set of numerical attributes and,
 // potentially, a set of sub-blocks.
 // A markup file is inside an implicit "root block".
