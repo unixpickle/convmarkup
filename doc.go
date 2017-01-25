@@ -67,6 +67,8 @@
 //
 // The ReLU block is a ReLU activation layer.
 //
+// The Softmax block is a Softmax activation layer.
+//
 // The Padding block performs tensor padding.
 // It has four attributes, t, b, r, l, for top, bottom,
 // right, and left padding respectively.
@@ -86,4 +88,8 @@
 //         Conv(w=3, h=3, n=64)
 //     }
 //
+// The FC block defines a fully-connected layer.
+// It has two attributes: in and out, which determine the
+// input and output count.
+// The output tensor of an FC has a width and height of 1.
 package convmarkup
