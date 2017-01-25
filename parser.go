@@ -62,6 +62,38 @@ func Parse(contents string) (*ASTNode, error) {
 	return &ASTNode{Children: parsed}, nil
 }
 
+// Block creates a Block instance for the node.
+//
+// If this is the root node, passing Dims{} as the input
+// dimensions should suffice.
+func (a *ASTNode) Block(in Dims, c map[string]Creator) (Block, error) {
+	creator, ok := c[a.BlockName]
+	if !ok {
+		if a.BlockName == "" {
+			return nil, errors.New("missing Creator for root node")
+		}
+		return nil, fmt.Errorf("line %d: missing creator for %s", a.Line+1,
+			a.BlockName)
+	}
+
+	var children []Block
+	subIn := in
+	for _, ch := range a.Children {
+		child, err := ch.Block(subIn, c)
+		if err != nil {
+			return nil, err
+		}
+		children = append(children, child)
+		subIn = child.OutDims()
+	}
+
+	res, err := creator(in, a.Attrs, children)
+	if err == nil {
+		return res, nil
+	}
+	return nil, fmt.Errorf("line %d: %s", a.Line+1, err.Error())
+}
+
 // parseLines parses a list of lines.
 func parseLines(off int, l []string) ([]*ASTNode, error) {
 	var res []*ASTNode

@@ -1,6 +1,9 @@
 package convmarkup
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // Common errors during parsing.
 var (
@@ -28,6 +31,7 @@ type Creator func(in Dims, attr map[string]float64, children []Block) (Block, er
 // creators.
 func DefaultCreators() map[string]Creator {
 	return map[string]Creator{
+		"":           CreateRoot,
 		"Input":      CreateInput,
 		"Conv":       CreateConv,
 		"MaxPool":    CreateMaxPool,
@@ -40,6 +44,32 @@ func DefaultCreators() map[string]Creator {
 	}
 }
 
+// Root is a root block.
+type Root struct {
+	Children []Block
+}
+
+// CreateRoot creates a Root block.
+func CreateRoot(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if len(children) == 0 {
+		return nil, ErrNotEnoughChildren
+	}
+	if err := hasAllAndOnlyInts(attr, 0); err != nil {
+		return nil, err
+	}
+	return &Root{Children: children}, nil
+}
+
+// Type returns the empty string.
+func (r *Root) Type() string {
+	return ""
+}
+
+// OutDims returns the dims from the last child.
+func (r *Root) OutDims() Dims {
+	return r.Children[len(r.Children)-1].OutDims()
+}
+
 // Input is the block that describes the input dimensions.
 type Input struct {
 	Out Dims
@@ -50,7 +80,7 @@ func CreateInput(in Dims, attr map[string]float64, children []Block) (Block, err
 	if len(children) != 0 {
 		return nil, ErrUnexpectedChildren
 	}
-	if err := hasAllAndOnlyInts(attr, "w", "h", "d"); err != nil {
+	if err := hasAllAndOnlyInts(attr, 1, "w", "h", "d"); err != nil {
 		return nil, err
 	}
 	return &Input{Out: Dims{
@@ -93,7 +123,7 @@ func CreateConv(in Dims, attr map[string]float64, children []Block) (Block, erro
 	if err := hasAllAttrs(attr, "w", "h", "n"); err != nil {
 		return nil, err
 	}
-	if err := validNonZeroInt(attr, "w", "h", "n", "sx", "sy"); err != nil {
+	if err := validInt(attr, 1, "w", "h", "n", "sx", "sy"); err != nil {
 		return nil, err
 	}
 
@@ -113,8 +143,8 @@ func CreateConv(in Dims, attr map[string]float64, children []Block) (Block, erro
 	}
 
 	res.Out = Dims{
-		Width:  1 + (in.Width-res.FilterCount)/res.StrideX,
-		Height: 1 + (in.Height-res.FilterCount)/res.StrideY,
+		Width:  1 + (in.Width-res.FilterWidth)/res.StrideX,
+		Height: 1 + (in.Height-res.FilterHeight)/res.StrideY,
 		Depth:  res.FilterCount,
 	}
 	if res.Out.Width < 0 {
@@ -149,7 +179,7 @@ func CreateMaxPool(in Dims, attr map[string]float64, children []Block) (Block, e
 	if len(children) > 0 {
 		return nil, ErrUnexpectedChildren
 	}
-	if err := hasAllAndOnlyInts(attr, "w", "h"); err != nil {
+	if err := hasAllAndOnlyInts(attr, 1, "w", "h"); err != nil {
 		return nil, err
 	}
 	return &MaxPool{
@@ -187,7 +217,7 @@ func CreatePadding(in Dims, attr map[string]float64, children []Block) (Block, e
 	if len(children) > 0 {
 		return nil, ErrUnexpectedChildren
 	}
-	if err := hasAllAndOnlyInts(attr, "t", "r", "b", "l"); err != nil {
+	if err := hasAllAndOnlyInts(attr, 0, "t", "r", "b", "l"); err != nil {
 		return nil, err
 	}
 	res := &Padding{
@@ -227,16 +257,25 @@ func CreateResidual(in Dims, attr map[string]float64, children []Block) (Block, 
 	if len(children) < 1 {
 		return nil, ErrNotEnoughChildren
 	}
+	var projChildren []Block
 	projBlock, ok := children[0].(*Projection)
 	if ok {
+		projChildren = projBlock.Children
 		children = children[1:]
 	}
 	if len(children) < 1 {
 		return nil, ErrNotEnoughChildren
 	}
-	var projChildren []Block
+	layersOut := children[len(children)-1].OutDims()
 	if ok {
-		projChildren = projBlock.Children
+		projOut := projChildren[len(projChildren)-1].OutDims()
+		if projOut != layersOut {
+			return nil, errors.New("residual output size mismatch")
+		}
+	} else {
+		if layersOut != in {
+			return nil, errors.New("residual output size mismatch")
+		}
 	}
 	return &Residual{
 		Projection: projChildren,
@@ -262,7 +301,7 @@ type Projection struct {
 
 // CreateProjection creates a *Projection block.
 func CreateProjection(in Dims, attr map[string]float64, children []Block) (Block, error) {
-	if err := hasAllAndOnlyInts(attr); err != nil {
+	if err := hasAllAndOnlyInts(attr, 0); err != nil {
 		return nil, err
 	}
 	if len(children) == 0 {
@@ -299,7 +338,7 @@ func ActivationCreator(name string) Creator {
 		if len(c) != 0 {
 			return nil, ErrUnexpectedChildren
 		}
-		if err := hasAllAndOnlyInts(a); err != nil {
+		if err := hasAllAndOnlyInts(a, 0); err != nil {
 			return nil, err
 		}
 		return &Activation{Name: name, Out: in}, nil
@@ -316,14 +355,14 @@ func (a *Activation) OutDims() Dims {
 	return a.Out
 }
 
-func hasAllAndOnlyInts(attrs map[string]float64, allowed ...string) error {
+func hasAllAndOnlyInts(attrs map[string]float64, min int, allowed ...string) error {
 	if err := onlyTheseAttrs(attrs, allowed...); err != nil {
 		return err
 	}
 	if err := hasAllAttrs(attrs, allowed...); err != nil {
 		return err
 	}
-	return validNonZeroInt(attrs, allowed...)
+	return validInt(attrs, min, allowed...)
 }
 
 func onlyTheseAttrs(attrs map[string]float64, allowed ...string) error {
@@ -351,14 +390,14 @@ func hasAllAttrs(attrs map[string]float64, mustHave ...string) error {
 	return nil
 }
 
-func validNonZeroInt(attrs map[string]float64, names ...string) error {
+func validInt(attrs map[string]float64, min int, names ...string) error {
 	for _, name := range names {
 		val, ok := attrs[name]
 		if ok {
-			if val <= 0 {
-				return errors.New("attribute " + name + " cannot be 0")
-			} else if val != float64(int(val)) {
+			if val != float64(int(val)) {
 				return errors.New("attribute " + name + " must be integer")
+			} else if int(val) < min {
+				return fmt.Errorf("attribute %s cannot be %d", name, int(val))
 			}
 		}
 	}

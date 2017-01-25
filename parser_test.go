@@ -85,3 +85,109 @@ func TestParseErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestASTNodeBlock(t *testing.T) {
+	markup := `
+	Input(w=224, h=113, d=3)
+
+	Padding(l=2, r=0, t=1, b=3)
+	Conv(w=3, h=5, n=64, sx=2, sy=4)
+	BatchNorm
+	ReLU
+
+	MaxPool(w=1, h=2)
+	Residual {
+	 	Padding(l=1, r=1, t=1, b=1)
+	 	Conv(w=3, h=3, n=64)
+	}
+	Residual {
+	 	Projection {
+	 		Conv(w=1, h=1, n=128)
+	 	}
+	 	Padding(l=1, r=1, t=1, b=1)
+	 	Conv(w=3, h=3, n=128)
+	}
+
+	Softmax
+	`
+
+	parsed, err := Parse(markup)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actual, err := parsed.Block(Dims{}, DefaultCreators())
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := &Root{
+		Children: []Block{
+			&Input{Out: Dims{Width: 224, Height: 113, Depth: 3}},
+			&Padding{Top: 1, Right: 0, Bottom: 3, Left: 2,
+				Out: Dims{Width: 226, Height: 117, Depth: 3}},
+			&Conv{FilterWidth: 3, FilterHeight: 5, FilterCount: 64, StrideX: 2, StrideY: 4,
+				Out: Dims{Width: 112, Height: 29, Depth: 64}},
+			&Activation{Name: "BatchNorm", Out: Dims{Width: 112, Height: 29, Depth: 64}},
+			&Activation{Name: "ReLU", Out: Dims{Width: 112, Height: 29, Depth: 64}},
+			&MaxPool{Width: 1, Height: 2, Out: Dims{Width: 112, Height: 14, Depth: 64}},
+			&Residual{Residual: []Block{
+				&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
+					Out: Dims{Width: 114, Height: 16, Depth: 64}},
+				&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 64, StrideX: 1,
+					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 64}},
+			}},
+			&Residual{Projection: []Block{
+				&Conv{FilterWidth: 1, FilterHeight: 1, FilterCount: 128, StrideX: 1,
+					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
+			}, Residual: []Block{
+				&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
+					Out: Dims{Width: 114, Height: 16, Depth: 64}},
+				&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 128, StrideX: 1,
+					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
+			}},
+			&Activation{Name: "Softmax", Out: Dims{Width: 112, Height: 14, Depth: 128}},
+		},
+	}
+
+	aRoot, ok := actual.(*Root)
+	if !ok {
+		t.Fatalf("root should be Root but it's %T", aRoot)
+	}
+
+	if len(aRoot.Children) != len(expected.Children) {
+		t.Fatalf("expected %d children but got %d", len(expected.Children),
+			len(aRoot.Children))
+	}
+
+	for i, x := range expected.Children {
+		a := aRoot.Children[i]
+		if !reflect.DeepEqual(a, x) {
+			t.Errorf("child %d: expected %#v but got %#v", i, x, a)
+		}
+	}
+}
+
+func TestASTnodeFailures(t *testing.T) {
+	input := "Input(w=224, h=224, d=3)\n"
+	invalid := []string{
+		input + "Residual {\n}",
+		input + "Padding(l=1, r=1, t=3)",
+		input + "MaxPool(w=2)",
+		input + "Conv(w=3, h=2)",
+		input + "Residual {\nConv(w=3, h=3, n=3)\n}",
+		input + "Residual {\nConv(w=1, h=1, n=5)\n}",
+		input + "Residual {\nProjection {\nConv(w=1, h=1, n=5)\n}\nConv(w=1, h=1, n=3)\n}",
+		input + "Residual {\nProjection {\n\n}\nConv(w=1, h=1, n=3)\n}",
+	}
+	for i, x := range invalid {
+		parsed, err := Parse(x)
+		if err != nil {
+			t.Errorf("parse %d: %s", i, err)
+			continue
+		}
+		_, err = parsed.Block(Dims{}, DefaultCreators())
+		if err == nil {
+			t.Errorf("test %d did not fail", i)
+		}
+	}
+}
