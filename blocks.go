@@ -46,6 +46,8 @@ func DefaultCreators() map[string]Creator {
 }
 
 // Root is a root block.
+//
+// A Root must always have at least one child.
 type Root struct {
 	Children []Block
 }
