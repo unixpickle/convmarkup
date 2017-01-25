@@ -146,7 +146,7 @@ func TestASTNodeBlock(t *testing.T) {
 				&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 128, StrideX: 1,
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
 			}},
-			&FC{InCount: 112 * 14 * 128, OutCount: 10},
+			&FC{OutCount: 10},
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
 	}

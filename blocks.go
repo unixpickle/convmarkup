@@ -330,7 +330,6 @@ func (p *Projection) OutDims() Dims {
 
 // FC is a fully-connected layer.
 type FC struct {
-	InCount  int
 	OutCount int
 }
 
@@ -342,10 +341,7 @@ func CreateFC(in Dims, attr map[string]float64, children []Block) (Block, error)
 	if err := hasAllAndOnlyInts(attr, 1, "out"); err != nil {
 		return nil, err
 	}
-	return &FC{
-		InCount:  int(in.Width * in.Height * in.Depth),
-		OutCount: int(attr["out"]),
-	}, nil
+	return &FC{OutCount: int(attr["out"])}, nil
 }
 
 // Type returns "FC".
