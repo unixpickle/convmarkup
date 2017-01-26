@@ -95,8 +95,12 @@
 //         Conv(w=3, h=3, n=64)
 //     }
 //
+// The Assert block has no effect besides ensuring that
+// the input dimensions are specific values.
+// Like Input, it has three attributes: w, h, and d.
+//
 // The FC block defines a fully-connected layer.
-// It has one attributes: "out", which determines the
+// It has one attribute: "out", which determines the
 // output count.
 // The output tensor of an FC has a width and height of 1.
 package convmarkup

@@ -33,6 +33,7 @@ func DefaultCreators() map[string]Creator {
 	return map[string]Creator{
 		"":           CreateRoot,
 		"Input":      CreateInput,
+		"Assert":     CreateAssert,
 		"Conv":       CreateConv,
 		"MaxPool":    CreateMaxPool,
 		"Padding":    CreatePadding,
@@ -101,6 +102,39 @@ func (i *Input) Type() string {
 // OutDims returns i.Out.
 func (i *Input) OutDims() Dims {
 	return i.Out
+}
+
+// Assert is a place-holder block that ensures a specific
+// tensor dimension.
+type Assert struct {
+	In Dims
+}
+
+// CreateAssert creates an *Assert block.
+func CreateAssert(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if len(children) != 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	if err := hasAllAndOnlyInts(attr, 0, "w", "h", "d"); err != nil {
+		return nil, err
+	}
+	if int(attr["w"]) != in.Width || int(attr["h"]) != in.Height ||
+		int(attr["d"]) != in.Depth {
+		return nil, fmt.Errorf("expected dimensions %dx%dx%d but got %dx%dx%d",
+			int(attr["w"]), int(attr["h"]), int(attr["d"]),
+			in.Width, in.Height, in.Depth)
+	}
+	return &Assert{In: in}, nil
+}
+
+// Type returns "Assert".
+func (a *Assert) Type() string {
+	return "Assert"
+}
+
+// OutDims returns the output dimensions.
+func (a *Assert) OutDims() Dims {
+	return a.In
 }
 
 // Conv is a Block for a convolutional layer.

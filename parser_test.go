@@ -108,6 +108,7 @@ func TestASTNodeBlock(t *testing.T) {
 	 	Conv(w=3, h=3, n=128)
 	}
 
+	Assert(w=112, h=14, d=128)
 	FC(out=10)
 	Softmax
 	`
@@ -146,6 +147,7 @@ func TestASTNodeBlock(t *testing.T) {
 				&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 128, StrideX: 1,
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
 			}},
+			&Assert{In: Dims{Width: 112, Height: 14, Depth: 128}},
 			&FC{OutCount: 10},
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
@@ -181,6 +183,9 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Residual {\nProjection {\nConv(w=1, h=1, n=5)\n}\nConv(w=1, h=1, n=3)\n}",
 		input + "Residual {\nProjection {\n\n}\nConv(w=1, h=1, n=3)\n}",
 		input + "FC",
+		input + "Assert(w=223, h=224, d=3)",
+		input + "Assert(w=224, h=223, d=3)",
+		input + "Assert(w=224, h=224, d=2)",
 	}
 	for i, x := range invalid {
 		parsed, err := Parse(x)
