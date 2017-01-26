@@ -109,4 +109,11 @@
 // It has one attribute: "out", which determines the
 // output count.
 // The output tensor of an FC has a width and height of 1.
+//
+// The Repeat block repeats its sub-blocks a given number
+// of times.
+// The n attribute specifies the total number of copies.
+// The output dimension must be equal to the input
+// dimension, even with n=1.
+// An n value of zero is invalid.
 package convmarkup

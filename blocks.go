@@ -41,6 +41,7 @@ func DefaultCreators() map[string]Creator {
 		"Residual":   CreateResidual,
 		"Projection": CreateProjection,
 		"FC":         CreateFC,
+		"Repeat":     CreateRepeat,
 		"BatchNorm":  ActivationCreator("BatchNorm"),
 		"ReLU":       ActivationCreator("ReLU"),
 		"Softmax":    ActivationCreator("Softmax"),
@@ -424,6 +425,40 @@ func (f *FC) Type() string {
 // OutDims returns the output dimensions.
 func (f *FC) OutDims() Dims {
 	return Dims{Width: 1, Height: 1, Depth: f.OutCount}
+}
+
+// Repeat is a meta-block for repeating its contents.
+type Repeat struct {
+	N        int
+	Children []Block
+	In       Dims
+}
+
+// CreateRepeat creates a *Repeat block.
+func CreateRepeat(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if err := hasAllAndOnlyInts(attr, 1, "n"); err != nil {
+		return nil, err
+	}
+	if len(children) > 0 {
+		if children[len(children)-1].OutDims() != in {
+			return nil, errors.New("input and output lengths must match")
+		}
+	}
+	return &Repeat{
+		N:        int(attr["n"]),
+		Children: children,
+		In:       in,
+	}, nil
+}
+
+// Type returns "Repeat".
+func (r *Repeat) Type() string {
+	return "Repeat"
+}
+
+// OutDims returns the Repeat's output dimensions.
+func (r *Repeat) OutDims() Dims {
+	return r.In
 }
 
 // Activation is any block with no attributes.

@@ -104,8 +104,12 @@ func TestASTNodeBlock(t *testing.T) {
 	 	Projection {
 	 		Conv(w=1, h=1, n=128)
 	 	}
-	 	Padding(l=1, r=1, t=1, b=1)
-	 	Conv(w=3, h=3, n=128)
+		Repeat(n=2) {
+	 		Padding(l=1, r=1, t=1, b=1)
+	 		Conv(w=3, h=3, n=64)
+		}
+		Padding(l=1, r=1, t=1, b=1)
+		Conv(w=3, h=3, n=128)
 	}
 
 	Assert(w=112, h=14, d=128)
@@ -143,6 +147,11 @@ func TestASTNodeBlock(t *testing.T) {
 				&Conv{FilterWidth: 1, FilterHeight: 1, FilterCount: 128, StrideX: 1,
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
 			}, Residual: []Block{
+				&Repeat{N: 2, In: Dims{Width: 112, Height: 14, Depth: 64},
+					Children: []Block{&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
+						Out: Dims{Width: 114, Height: 16, Depth: 64}},
+						&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 64, StrideX: 1,
+							StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 64}}}},
 				&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
 					Out: Dims{Width: 114, Height: 16, Depth: 64}},
 				&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 128, StrideX: 1,
@@ -189,6 +198,9 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Assert(w=223, h=224, d=3)",
 		input + "Assert(w=224, h=223, d=3)",
 		input + "Assert(w=224, h=224, d=2)",
+		input + "Repeat(n=0)",
+		input + "Repeat(n=1) {\nConv(w=3, h=3, n=3)\n}",
+		input + "Repeat(n=1) {\nConv(w=1, h=1, n=4)\n}",
 	}
 	for i, x := range invalid {
 		parsed, err := Parse(x)
