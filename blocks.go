@@ -35,13 +35,13 @@ func DefaultCreators() map[string]Creator {
 		"Input":      CreateInput,
 		"Assert":     CreateAssert,
 		"Conv":       CreateConv,
-		"MaxPool":    CreateMaxPool,
-		"MeanPool":   CreateMeanPool,
 		"Padding":    CreatePadding,
 		"Residual":   CreateResidual,
 		"Projection": CreateProjection,
 		"FC":         CreateFC,
 		"Repeat":     CreateRepeat,
+		"MaxPool":    PoolCreator("MaxPool"),
+		"MeanPool":   PoolCreator("MeanPool"),
 		"BatchNorm":  ActivationCreator("BatchNorm"),
 		"ReLU":       ActivationCreator("ReLU"),
 		"Softmax":    ActivationCreator("Softmax"),
@@ -206,77 +206,68 @@ func (c *Conv) OutDims() Dims {
 	return c.Out
 }
 
-// MaxPool is a max-pooling block.
-type MaxPool struct {
-	Width  int
-	Height int
-	Out    Dims
+// Pool is a pooling block.
+// The Name attribute will be "MaxPool" or "MeanPool".
+type Pool struct {
+	Name    string
+	Width   int
+	Height  int
+	StrideX int
+	StrideY int
+	Out     Dims
 }
 
-// CreateMaxPool creates a *MaxPool block.
-func CreateMaxPool(in Dims, attr map[string]float64, children []Block) (Block, error) {
-	if len(children) > 0 {
-		return nil, ErrUnexpectedChildren
-	}
-	if err := hasAllAndOnlyInts(attr, 1, "w", "h"); err != nil {
-		return nil, err
-	}
-	return &MaxPool{
-		Width:  int(attr["w"]),
-		Height: int(attr["h"]),
-		Out: Dims{
-			Width:  in.Width / int(attr["w"]),
-			Height: in.Height / int(attr["h"]),
+// PoolCreator makes a Creator for a pool type.
+func PoolCreator(name string) Creator {
+	return func(in Dims, attr map[string]float64, children []Block) (Block, error) {
+		if len(children) > 0 {
+			return nil, ErrUnexpectedChildren
+		}
+		if err := onlyTheseAttrs(attr, "w", "h", "sx", "sy"); err != nil {
+			return nil, err
+		}
+		if err := hasAllAttrs(attr, "w", "h"); err != nil {
+			return nil, err
+		}
+		if err := validInt(attr, 1, "w", "h", "sx", "sy"); err != nil {
+			return nil, err
+		}
+		res := &Pool{
+			Name:    name,
+			Width:   int(attr["w"]),
+			Height:  int(attr["h"]),
+			StrideX: int(attr["sx"]),
+			StrideY: int(attr["sy"]),
+		}
+		if res.StrideX == 0 {
+			res.StrideX = res.Width
+		}
+		if res.StrideY == 0 {
+			res.StrideY = res.Height
+		}
+		res.Out = Dims{
+			Width:  1 + (in.Width-res.Width)/res.StrideX,
+			Height: 1 + (in.Height-res.Height)/res.StrideY,
 			Depth:  in.Depth,
-		},
-	}, nil
+		}
+		if res.Out.Width < 0 {
+			res.Out.Width = 0
+		}
+		if res.Out.Height < 0 {
+			res.Out.Height = 0
+		}
+		return res, nil
+	}
 }
 
-// Type returns "MaxPool".
-func (m *MaxPool) Type() string {
-	return "MaxPool"
+// Type returns p.Name.
+func (p *Pool) Type() string {
+	return p.Name
 }
 
 // OutDims returns the output dimensions.
-func (m *MaxPool) OutDims() Dims {
-	return m.Out
-}
-
-// MeanPool is a mean-pooling block.
-type MeanPool struct {
-	Width  int
-	Height int
-	Out    Dims
-}
-
-// CreateMeanPool creates a *MeanPool block.
-func CreateMeanPool(in Dims, attr map[string]float64, children []Block) (Block, error) {
-	if len(children) > 0 {
-		return nil, ErrUnexpectedChildren
-	}
-	if err := hasAllAndOnlyInts(attr, 1, "w", "h"); err != nil {
-		return nil, err
-	}
-	w, h := int(attr["w"]), int(attr["h"])
-	return &MeanPool{
-		Width:  w,
-		Height: h,
-		Out: Dims{
-			Width:  (in.Width + w - 1) / w,
-			Height: (in.Height + h - 1) / h,
-			Depth:  in.Depth,
-		},
-	}, nil
-}
-
-// Type returns "MeanPool".
-func (m *MeanPool) Type() string {
-	return "MeanPool"
-}
-
-// OutDims returns the output dimensions.
-func (m *MeanPool) OutDims() Dims {
-	return m.Out
+func (p *Pool) OutDims() Dims {
+	return p.Out
 }
 
 // Padding is a tensor padding block.

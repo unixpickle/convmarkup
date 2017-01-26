@@ -113,7 +113,7 @@ func TestASTNodeBlock(t *testing.T) {
 	}
 
 	Assert(w=112, h=14, d=128)
-	MeanPool(w=2, h=3)
+	MeanPool(w=2, h=3, sx=1, sy=2)
 	FC(out=10)
 	Softmax
 	`
@@ -136,7 +136,8 @@ func TestASTNodeBlock(t *testing.T) {
 				Out: Dims{Width: 112, Height: 29, Depth: 64}},
 			&Activation{Name: "BatchNorm", Out: Dims{Width: 112, Height: 29, Depth: 64}},
 			&Activation{Name: "ReLU", Out: Dims{Width: 112, Height: 29, Depth: 64}},
-			&MaxPool{Width: 1, Height: 2, Out: Dims{Width: 112, Height: 14, Depth: 64}},
+			&Pool{Name: "MaxPool", Width: 1, Height: 2, StrideX: 1, StrideY: 2,
+				Out: Dims{Width: 112, Height: 14, Depth: 64}},
 			&Residual{Residual: []Block{
 				&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
 					Out: Dims{Width: 114, Height: 16, Depth: 64}},
@@ -158,7 +159,8 @@ func TestASTNodeBlock(t *testing.T) {
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
 			}},
 			&Assert{In: Dims{Width: 112, Height: 14, Depth: 128}},
-			&MeanPool{Width: 2, Height: 3, Out: Dims{Width: 56, Height: 5, Depth: 128}},
+			&Pool{Name: "MeanPool", Width: 2, Height: 3, StrideX: 1, StrideY: 2,
+				Out: Dims{Width: 111, Height: 6, Depth: 128}},
 			&FC{OutCount: 10},
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
@@ -189,6 +191,7 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Padding(l=1, r=1, t=3)",
 		input + "MaxPool(w=2)",
 		input + "MeanPool(w=2)",
+		input + "MeanPool(w=2, h=2, sx=0)",
 		input + "Conv(w=3, h=2)",
 		input + "Residual {\nConv(w=3, h=3, n=3)\n}",
 		input + "Residual {\nConv(w=1, h=1, n=5)\n}",

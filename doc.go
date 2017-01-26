@@ -68,13 +68,14 @@
 // Absent strides are assumed to be 1.
 //
 // The MaxPool block defines a max-pooling layer.
-// The w and h attributes set the pool width and height.
+// The w and h attributes set the pool width and height,
+// and sx and sy set the pool stride.
+// If a stride is not specified, it will be defaulted to
+// the corresponding span for that dimension.
 // Max-pooling layers drop partial pools.
 //
-// The MeanPool block defines a mean-pooling layer.
-// The w and h attributes set the pool width and height.
-// Mean-pooling layers deal with partial pools via zero
-// padding.
+// The MeanPool block defines a mean-pooling layer and
+// works the same way as MaxPool.
 //
 // The BatchNorm block is a batch normalization layer.
 //
