@@ -109,6 +109,7 @@ func TestASTNodeBlock(t *testing.T) {
 	}
 
 	Assert(w=112, h=14, d=128)
+	MeanPool(w=2, h=3)
 	FC(out=10)
 	Softmax
 	`
@@ -148,6 +149,7 @@ func TestASTNodeBlock(t *testing.T) {
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
 			}},
 			&Assert{In: Dims{Width: 112, Height: 14, Depth: 128}},
+			&MeanPool{Width: 2, Height: 3, Out: Dims{Width: 56, Height: 5, Depth: 128}},
 			&FC{OutCount: 10},
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
@@ -177,6 +179,7 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Residual {\n}",
 		input + "Padding(l=1, r=1, t=3)",
 		input + "MaxPool(w=2)",
+		input + "MeanPool(w=2)",
 		input + "Conv(w=3, h=2)",
 		input + "Residual {\nConv(w=3, h=3, n=3)\n}",
 		input + "Residual {\nConv(w=1, h=1, n=5)\n}",

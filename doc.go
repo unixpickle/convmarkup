@@ -69,6 +69,12 @@
 //
 // The MaxPool block defines a max-pooling layer.
 // The w and h attributes set the pool width and height.
+// Max-pooling layers drop partial pools.
+//
+// The MeanPool block defines a mean-pooling layer.
+// The w and h attributes set the pool width and height.
+// Mean-pooling layers deal with partial pools via zero
+// padding.
 //
 // The BatchNorm block is a batch normalization layer.
 //

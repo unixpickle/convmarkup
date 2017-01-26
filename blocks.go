@@ -36,6 +36,7 @@ func DefaultCreators() map[string]Creator {
 		"Assert":     CreateAssert,
 		"Conv":       CreateConv,
 		"MaxPool":    CreateMaxPool,
+		"MeanPool":   CreateMeanPool,
 		"Padding":    CreatePadding,
 		"Residual":   CreateResidual,
 		"Projection": CreateProjection,
@@ -237,6 +238,43 @@ func (m *MaxPool) Type() string {
 
 // OutDims returns the output dimensions.
 func (m *MaxPool) OutDims() Dims {
+	return m.Out
+}
+
+// MeanPool is a mean-pooling block.
+type MeanPool struct {
+	Width  int
+	Height int
+	Out    Dims
+}
+
+// CreateMeanPool creates a *MeanPool block.
+func CreateMeanPool(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if len(children) > 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	if err := hasAllAndOnlyInts(attr, 1, "w", "h"); err != nil {
+		return nil, err
+	}
+	w, h := int(attr["w"]), int(attr["h"])
+	return &MeanPool{
+		Width:  w,
+		Height: h,
+		Out: Dims{
+			Width:  (in.Width + w - 1) / w,
+			Height: (in.Height + h - 1) / h,
+			Depth:  in.Depth,
+		},
+	}, nil
+}
+
+// Type returns "MeanPool".
+func (m *MeanPool) Type() string {
+	return "MeanPool"
+}
+
+// OutDims returns the output dimensions.
+func (m *MeanPool) OutDims() Dims {
 	return m.Out
 }
 
