@@ -81,6 +81,10 @@
 //
 // The ReLU block is a ReLU activation layer.
 //
+// The Sigmoid block is a sigmoid activation layer.
+//
+// The Tanh block is a tanh activation layer.
+//
 // The Softmax block is a Softmax activation layer.
 //
 // The Padding block performs tensor padding.

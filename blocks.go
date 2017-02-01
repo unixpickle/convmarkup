@@ -44,6 +44,8 @@ func DefaultCreators() map[string]Creator {
 		"MeanPool":   PoolCreator("MeanPool"),
 		"BatchNorm":  ActivationCreator("BatchNorm"),
 		"ReLU":       ActivationCreator("ReLU"),
+		"Sigmoid":    ActivationCreator("Sigmoid"),
+		"Tanh":       ActivationCreator("Tanh"),
 		"Softmax":    ActivationCreator("Softmax"),
 	}
 }

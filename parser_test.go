@@ -116,6 +116,8 @@ func TestASTNodeBlock(t *testing.T) {
 	MeanPool(w=2, h=3, sx=1, sy=2)
 	FC(out=10)
 	Softmax
+	Sigmoid
+	Tanh
 	`
 
 	parsed, err := Parse(markup)
@@ -163,6 +165,8 @@ func TestASTNodeBlock(t *testing.T) {
 				Out: Dims{Width: 111, Height: 6, Depth: 128}},
 			&FC{OutCount: 10},
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
+			&Activation{Name: "Sigmoid", Out: Dims{Width: 1, Height: 1, Depth: 10}},
+			&Activation{Name: "Tanh", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
 	}
 
