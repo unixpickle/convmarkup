@@ -91,6 +91,13 @@
 // It has four attributes, t, b, r, l, for top, bottom,
 // right, and left padding respectively.
 //
+// The Resize block uses some form of interpolation to
+// change the width of the input tensor.
+// It has two attributes, w and h, for width and height
+// respectively.
+// Neither the input to nor output from a Resize may be
+// empty.
+//
 // The Residual block defines a residual grouping.
 // A Residual's sub-blocks are combined and used as the
 // residual mapping.

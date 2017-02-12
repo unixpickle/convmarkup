@@ -105,10 +105,10 @@ func TestASTNodeBlock(t *testing.T) {
 	 		Conv(w=1, h=1, n=128)
 	 	}
 		Repeat(n=2) {
-	 		Padding(l=1, r=1, t=1, b=1)
+			Padding(l=1, r=1, t=1, b=1)
 	 		Conv(w=3, h=3, n=64)
 		}
-		Padding(l=1, r=1, t=1, b=1)
+		Resize(w=114, h=16)
 		Conv(w=3, h=3, n=128)
 	}
 
@@ -155,8 +155,7 @@ func TestASTNodeBlock(t *testing.T) {
 						Out: Dims{Width: 114, Height: 16, Depth: 64}},
 						&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 64, StrideX: 1,
 							StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 64}}}},
-				&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
-					Out: Dims{Width: 114, Height: 16, Depth: 64}},
+				&Resize{Out: Dims{Width: 114, Height: 16, Depth: 64}},
 				&Conv{FilterWidth: 3, FilterHeight: 3, FilterCount: 128, StrideX: 1,
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
 			}},

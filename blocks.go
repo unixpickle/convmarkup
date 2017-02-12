@@ -36,6 +36,7 @@ func DefaultCreators() map[string]Creator {
 		"Assert":     CreateAssert,
 		"Conv":       CreateConv,
 		"Padding":    CreatePadding,
+		"Resize":     CreateResize,
 		"Residual":   CreateResidual,
 		"Projection": CreateProjection,
 		"FC":         CreateFC,
@@ -311,6 +312,42 @@ func (p *Padding) Type() string {
 // OutDims returns the output dimensions.
 func (p *Padding) OutDims() Dims {
 	return p.Out
+}
+
+// Resize is a tensor resizing block.
+type Resize struct {
+	Out Dims
+}
+
+// CreateResize creates a *Resize block.
+func CreateResize(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if len(children) > 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	if err := hasAllAndOnlyInts(attr, 1, "w", "h"); err != nil {
+		return nil, err
+	}
+	if in.Width == 0 || in.Height == 0 || in.Depth == 0 {
+		return nil, errors.New("input cannot be empty")
+	}
+	res := &Resize{
+		Out: Dims{
+			Width:  int(attr["w"]),
+			Height: int(attr["h"]),
+			Depth:  in.Depth,
+		},
+	}
+	return res, nil
+}
+
+// Type returns "Resize".
+func (r *Resize) Type() string {
+	return "Resize"
+}
+
+// OutDims returns the output dimensions.
+func (r *Resize) OutDims() Dims {
+	return r.Out
 }
 
 // Residual is a residual layer.
