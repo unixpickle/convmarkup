@@ -41,7 +41,7 @@ func DefaultCreators() map[string]Creator {
 		"Projection": CreateProjection,
 		"FC":         CreateFC,
 		"Repeat":     CreateRepeat,
-		"Scale":      CreateScale,
+		"Linear":     CreateLinear,
 		"MaxPool":    PoolCreator("MaxPool"),
 		"MeanPool":   PoolCreator("MeanPool"),
 		"BatchNorm":  ActivationCreator("BatchNorm"),
@@ -492,37 +492,41 @@ func (r *Repeat) OutDims() Dims {
 	return r.In
 }
 
-// Scale is a block for scaling the input tensor.
-type Scale struct {
-	Scaler float64
-	In     Dims
+// Linear is a block for scaling and biasing the input
+// tensor.
+type Linear struct {
+	Scale float64
+	Bias  float64
+	In    Dims
 }
 
-// CreateScale creates a *Scale block.
-func CreateScale(in Dims, attr map[string]float64, children []Block) (Block, error) {
-	if err := hasAllAttrs(attr, "scaler"); err != nil {
-		return nil, err
-	}
-	if err := onlyTheseAttrs(attr, "scaler"); err != nil {
+// CreateLinear creates a *Scale block.
+func CreateLinear(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if err := onlyTheseAttrs(attr, "scale", "bias"); err != nil {
 		return nil, err
 	}
 	if len(children) > 0 {
 		return nil, ErrUnexpectedChildren
 	}
-	return &Scale{
-		Scaler: attr["scaler"],
-		In:     in,
-	}, nil
+	res := &Linear{
+		Scale: attr["scale"],
+		Bias:  attr["bias"],
+		In:    in,
+	}
+	if _, ok := attr["scale"]; !ok {
+		res.Scale = 1
+	}
+	return res, nil
 }
 
-// Type returns "Scale".
-func (s *Scale) Type() string {
-	return "Scale"
+// Type returns "Linear".
+func (l *Linear) Type() string {
+	return "Linear"
 }
 
-// OutDims returns the Scale's output dimensions.
-func (s *Scale) OutDims() Dims {
-	return s.In
+// OutDims returns the Linear's output dimensions.
+func (l *Linear) OutDims() Dims {
+	return l.In
 }
 
 // Activation is any block with no attributes.

@@ -129,6 +129,8 @@
 // dimension, even with n=1.
 // An n value of zero is invalid.
 //
-// The Scale block scales its input by a constant, given
-// by the "scaler" parameter.
+// The Linear block scales input components by a constant
+// "scale" and then adds another constant, "bias".
+// If scale or bias are absent, they default to 1 and 0
+// respectively.
 package convmarkup

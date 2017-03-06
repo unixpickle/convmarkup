@@ -118,7 +118,7 @@ func TestASTNodeBlock(t *testing.T) {
 	Softmax
 	Sigmoid
 	Tanh
-	Scale(scaler=10)
+	Linear(scale=10, bias=5)
 	`
 
 	parsed, err := Parse(markup)
@@ -167,7 +167,7 @@ func TestASTNodeBlock(t *testing.T) {
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 			&Activation{Name: "Sigmoid", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 			&Activation{Name: "Tanh", Out: Dims{Width: 1, Height: 1, Depth: 10}},
-			&Scale{Scaler: 10, In: Dims{Width: 1, Height: 1, Depth: 10}},
+			&Linear{Scale: 10, Bias: 5, In: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
 	}
 
@@ -209,9 +209,7 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Repeat(n=0)",
 		input + "Repeat(n=1) {\nConv(w=3, h=3, n=3)\n}",
 		input + "Repeat(n=1) {\nConv(w=1, h=1, n=4)\n}",
-		input + "Scale",
-		input + "Scale(scaler=1, foo=1)",
-		input + "Scale(foo=1)",
+		input + "Linear(foo=1)",
 	}
 	for i, x := range invalid {
 		parsed, err := Parse(x)
