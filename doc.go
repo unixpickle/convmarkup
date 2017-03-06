@@ -92,7 +92,7 @@
 // right, and left padding respectively.
 //
 // The Resize block uses some form of interpolation to
-// change the width of the input tensor.
+// change the width and height of the input tensor.
 // It has two attributes, w and h, for width and height
 // respectively.
 // Neither the input to nor output from a Resize may be
@@ -128,4 +128,7 @@
 // The output dimension must be equal to the input
 // dimension, even with n=1.
 // An n value of zero is invalid.
+//
+// The Scale block scales its input by a constant, given
+// by the "scaler" parameter.
 package convmarkup

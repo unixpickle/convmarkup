@@ -41,6 +41,7 @@ func DefaultCreators() map[string]Creator {
 		"Projection": CreateProjection,
 		"FC":         CreateFC,
 		"Repeat":     CreateRepeat,
+		"Scale":      CreateScale,
 		"MaxPool":    PoolCreator("MaxPool"),
 		"MeanPool":   PoolCreator("MeanPool"),
 		"BatchNorm":  ActivationCreator("BatchNorm"),
@@ -489,6 +490,39 @@ func (r *Repeat) Type() string {
 // OutDims returns the Repeat's output dimensions.
 func (r *Repeat) OutDims() Dims {
 	return r.In
+}
+
+// Scale is a block for scaling the input tensor.
+type Scale struct {
+	Scaler float64
+	In     Dims
+}
+
+// CreateScale creates a *Scale block.
+func CreateScale(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if err := hasAllAttrs(attr, "scaler"); err != nil {
+		return nil, err
+	}
+	if err := onlyTheseAttrs(attr, "scaler"); err != nil {
+		return nil, err
+	}
+	if len(children) > 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	return &Scale{
+		Scaler: attr["scaler"],
+		In:     in,
+	}, nil
+}
+
+// Type returns "Scale".
+func (s *Scale) Type() string {
+	return "Scale"
+}
+
+// OutDims returns the Scale's output dimensions.
+func (s *Scale) OutDims() Dims {
+	return s.In
 }
 
 // Activation is any block with no attributes.
