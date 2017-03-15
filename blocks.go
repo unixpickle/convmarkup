@@ -18,6 +18,11 @@ type Dims struct {
 	Depth  int
 }
 
+// Volume takes the product of all three dimensions.
+func (d Dims) Volume() int {
+	return d.Width * d.Height * d.Depth
+}
+
 // A Block is a concrete instance of a block.
 type Block interface {
 	Type() string
