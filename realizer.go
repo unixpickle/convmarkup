@@ -24,11 +24,17 @@ var ErrUnsupportedBlock = errors.New("unsupported block type")
 // A Realizer may return (nil, nil) to indicate that the
 // Block has no meaningful instantiation.
 // This is appropriate for blocks such as Input or Assert.
-type Realizer func(r RealizerChain, inDims Dims, b Block) (interface{}, error)
+type Realizer interface {
+	Realize(r RealizerChain, inDims Dims, b Block) (interface{}, error)
+}
 
-// MetaRealizer realizes Assert and Input blocks.
-// For said blocks, (nil, nil) is returned.
-func MetaRealizer(r RealizerChain, inDims Dims, b Block) (interface{}, error) {
+// MetaRealizer is a Relaizer for the meta-blocks Assert
+// and Input.
+type MetaRealizer struct{}
+
+// For meta-blocks, (nil, nil) is returned.
+// Otherwise (nil, ErrUnsupportedBlock) is returned.
+func (m MetaRealizer) Realize(r RealizerChain, inDims Dims, b Block) (interface{}, error) {
 	switch b.(type) {
 	case *Assert, *Input:
 		return nil, nil
@@ -46,8 +52,8 @@ type RealizerChain []Realizer
 // If no Realizer supports the Block, a detailed error is
 // returned.
 func (r RealizerChain) Realize(d Dims, b Block) (interface{}, error) {
-	for _, f := range r {
-		obj, err := f(r, d, b)
+	for _, realizer := range r {
+		obj, err := realizer.Realize(r, d, b)
 		if err == ErrUnsupportedBlock {
 			continue
 		}
