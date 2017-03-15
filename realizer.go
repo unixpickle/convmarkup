@@ -1,0 +1,57 @@
+package convmarkup
+
+import (
+	"errors"
+	"fmt"
+)
+
+// ErrUnsupportedBlock is used by functions in a Realizer.
+var ErrUnsupportedBlock = errors.New("unsupported block type")
+
+// A Realizer instantiates Blocks, typically only of a
+// certain variety.
+// Realizers are meant to be combined using a
+// RealizerChain.
+//
+// A Realizer is passed a RealizerChain which it may use
+// to instantiate sub-blocks.
+//
+// When a Realizer does not support a Block, it should
+// return ErrUnsupportedBlock.
+// This allows multiple Realizers to be tried for a single
+// Block.
+//
+// A Realizer may return (nil, nil) to indicate that the
+// Block has no meaningful instantiation.
+// This is appropriate for blocks such as Input or Assert.
+type Realizer func(r RealizerChain, inDims Dims, b Block) (interface{}, error)
+
+// MetaRealizer realizes Assert and Input blocks.
+// For said blocks, (nil, nil) is returned.
+func MetaRealizer(r RealizerChain, inDims Dims, b Block) (interface{}, error) {
+	switch b.(type) {
+	case *Assert, *Input:
+		return nil, nil
+	default:
+		return nil, ErrUnsupportedBlock
+	}
+}
+
+// A RealizerChain realizes Blocks by trying one Realizer
+// at a time, in order, until one works.
+type RealizerChain []Realizer
+
+// Realize attempts to realize the Block by trying each
+// Realizer in order.
+// If no Realizer supports the Block, a detailed error is
+// returned.
+func (r RealizerChain) Realize(d Dims, b Block) (interface{}, error) {
+	for _, f := range r {
+		obj, err := f(r, d, b)
+		if err == ErrUnsupportedBlock {
+			continue
+		}
+		return obj, err
+	}
+	return nil, fmt.Errorf("cannot realize block type: %T", b)
+}
