@@ -48,13 +48,16 @@ type RealizerChain []Realizer
 // Realizer in order.
 // If no Realizer supports the Block, a detailed error is
 // returned.
-func (r RealizerChain) Realize(d Dims, b Block) (interface{}, error) {
+// The supported return value is false if and only if all
+// the Realizers returned ErrUnsupportedBlock.
+func (r RealizerChain) Realize(d Dims, b Block) (val interface{}, supported bool,
+	err error) {
 	for _, realizer := range r {
 		obj, err := realizer.Realize(r, d, b)
 		if err == ErrUnsupportedBlock {
 			continue
 		}
-		return obj, err
+		return obj, true, err
 	}
-	return nil, fmt.Errorf("unsupported block: %T", b)
+	return nil, false, fmt.Errorf("unsupported block: %T", b)
 }
