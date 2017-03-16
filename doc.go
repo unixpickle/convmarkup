@@ -133,4 +133,9 @@
 // "scale" and then adds another constant, "bias".
 // If scale or bias are absent, they default to 1 and 0
 // respectively.
+//
+// The Dropout block randomly eliminates a fraction of the
+// values.
+// The prob attribute, which is required, specifies the
+// probability of keeping a value.
 package convmarkup

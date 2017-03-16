@@ -119,6 +119,7 @@ func TestASTNodeBlock(t *testing.T) {
 	Sigmoid
 	Tanh
 	Linear(scale=10, bias=5)
+	Dropout(prob=0.6)
 	`
 
 	parsed, err := Parse(markup)
@@ -168,6 +169,7 @@ func TestASTNodeBlock(t *testing.T) {
 			&Activation{Name: "Sigmoid", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 			&Activation{Name: "Tanh", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 			&Linear{Scale: 10, Bias: 5, In: Dims{Width: 1, Height: 1, Depth: 10}},
+			&Dropout{Prob: 0.6, In: Dims{Width: 1, Height: 1, Depth: 10}},
 		},
 	}
 
@@ -210,6 +212,8 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Repeat(n=1) {\nConv(w=3, h=3, n=3)\n}",
 		input + "Repeat(n=1) {\nConv(w=1, h=1, n=4)\n}",
 		input + "Linear(foo=1)",
+		input + "Dropout(foo=1)",
+		input + "Dropout",
 	}
 	for i, x := range invalid {
 		parsed, err := Parse(x)

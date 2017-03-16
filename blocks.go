@@ -47,6 +47,7 @@ func DefaultCreators() map[string]Creator {
 		"FC":         CreateFC,
 		"Repeat":     CreateRepeat,
 		"Linear":     CreateLinear,
+		"Dropout":    CreateDropout,
 		"MaxPool":    PoolCreator("MaxPool"),
 		"MeanPool":   PoolCreator("MeanPool"),
 		"BatchNorm":  ActivationCreator("BatchNorm"),
@@ -505,7 +506,7 @@ type Linear struct {
 	In    Dims
 }
 
-// CreateLinear creates a *Scale block.
+// CreateLinear creates a *Linear block.
 func CreateLinear(in Dims, attr map[string]float64, children []Block) (Block, error) {
 	if err := onlyTheseAttrs(attr, "scale", "bias"); err != nil {
 		return nil, err
@@ -532,6 +533,41 @@ func (l *Linear) Type() string {
 // OutDims returns the Linear's output dimensions.
 func (l *Linear) OutDims() Dims {
 	return l.In
+}
+
+// Dropout is a block for dropout regularization.
+type Dropout struct {
+	Prob float64
+	In   Dims
+}
+
+// CreateDropout creates a *Dropout block.
+func CreateDropout(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if err := onlyTheseAttrs(attr, "prob"); err != nil {
+		return nil, err
+	} else if err = hasAllAttrs(attr, "prob"); err != nil {
+		return nil, err
+	} else if len(children) > 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	res := &Dropout{
+		Prob: attr["prob"],
+		In:   in,
+	}
+	if res.Prob < 0 || res.Prob > 1 {
+		return nil, errors.New("attribute prob must be between 0 and 1")
+	}
+	return res, nil
+}
+
+// Type returns "Dropout".
+func (d *Dropout) Type() string {
+	return "Dropout"
+}
+
+// OutDims returns the Dropout's output dimensions.
+func (d *Dropout) OutDims() Dims {
+	return d.In
 }
 
 // Activation is any block with no attributes.
