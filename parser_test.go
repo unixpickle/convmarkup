@@ -103,6 +103,7 @@ func TestASTNodeBlock(t *testing.T) {
 	Residual {
 	 	Projection {
 	 		Conv(w=1, h=1, n=128)
+			Debug(foo=3)
 	 	}
 		Repeat(n=2) {
 			Padding(l=1, r=1, t=1, b=1)
@@ -151,6 +152,8 @@ func TestASTNodeBlock(t *testing.T) {
 			&Residual{Projection: []Block{
 				&Conv{FilterWidth: 1, FilterHeight: 1, FilterCount: 128, StrideX: 1,
 					StrideY: 1, Out: Dims{Width: 112, Height: 14, Depth: 128}},
+				&Debug{Attrs: map[string]float64{"foo": 3},
+					In: Dims{Width: 112, Height: 14, Depth: 128}},
 			}, Residual: []Block{
 				&Repeat{N: 2, In: Dims{Width: 112, Height: 14, Depth: 64},
 					Children: []Block{&Padding{Left: 1, Right: 1, Top: 1, Bottom: 1,
@@ -214,6 +217,7 @@ func TestASTnodeFailures(t *testing.T) {
 		input + "Linear(foo=1)",
 		input + "Dropout(foo=1)",
 		input + "Dropout",
+		input + "Debug {\nDebug\n}",
 	}
 	for i, x := range invalid {
 		parsed, err := Parse(x)

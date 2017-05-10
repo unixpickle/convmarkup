@@ -138,4 +138,10 @@
 // values.
 // The prob attribute, which is required, specifies the
 // probability of keeping a value.
+//
+// The Debug block is an implementation-specific way of
+// analyzing data at a certain spot in a network.
+// It does not modify its input.
+// It should have no children, but it can have any set of
+// attributes.
 package convmarkup

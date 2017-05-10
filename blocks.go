@@ -48,6 +48,7 @@ func DefaultCreators() map[string]Creator {
 		"Repeat":     CreateRepeat,
 		"Linear":     CreateLinear,
 		"Dropout":    CreateDropout,
+		"Debug":      CreateDebug,
 		"MaxPool":    PoolCreator("MaxPool"),
 		"MeanPool":   PoolCreator("MeanPool"),
 		"BatchNorm":  ActivationCreator("BatchNorm"),
@@ -567,6 +568,34 @@ func (d *Dropout) Type() string {
 
 // OutDims returns the Dropout's output dimensions.
 func (d *Dropout) OutDims() Dims {
+	return d.In
+}
+
+// Debug is a block for implementation-specific debugging.
+type Debug struct {
+	Attrs map[string]float64
+	In    Dims
+}
+
+// CreateDebug creates a *Debug block.
+func CreateDebug(in Dims, attr map[string]float64, children []Block) (Block, error) {
+	if len(children) > 0 {
+		return nil, ErrUnexpectedChildren
+	}
+	res := &Debug{
+		Attrs: attr,
+		In:    in,
+	}
+	return res, nil
+}
+
+// Type returns "Debug".
+func (d *Debug) Type() string {
+	return "Debug"
+}
+
+// OutDims returns the Debug's output dimensions.
+func (d *Debug) OutDims() Dims {
 	return d.In
 }
 
