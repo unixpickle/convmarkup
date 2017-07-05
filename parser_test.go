@@ -115,6 +115,7 @@ func TestASTNodeBlock(t *testing.T) {
 
 	Assert(w=112, h=14, d=128)
 	MeanPool(w=2, h=3, sx=1, sy=2)
+	MaxPool
 	FC(out=10)
 	Softmax
 	Sigmoid
@@ -167,6 +168,8 @@ func TestASTNodeBlock(t *testing.T) {
 			&Assert{In: Dims{Width: 112, Height: 14, Depth: 128}},
 			&Pool{Name: "MeanPool", Width: 2, Height: 3, StrideX: 1, StrideY: 2,
 				Out: Dims{Width: 111, Height: 6, Depth: 128}},
+			&Pool{Name: "MaxPool", Width: 111, Height: 6, StrideX: 111, StrideY: 6,
+				Out: Dims{Width: 1, Height: 1, Depth: 128}},
 			&FC{OutCount: 10},
 			&Activation{Name: "Softmax", Out: Dims{Width: 1, Height: 1, Depth: 10}},
 			&Activation{Name: "Sigmoid", Out: Dims{Width: 1, Height: 1, Depth: 10}},
@@ -199,8 +202,6 @@ func TestASTnodeFailures(t *testing.T) {
 	invalid := []string{
 		input + "Residual {\n}",
 		input + "Padding(l=1, r=1, t=3)",
-		input + "MaxPool(w=2)",
-		input + "MeanPool(w=2)",
 		input + "MeanPool(w=2, h=2, sx=0)",
 		input + "Conv(w=3, h=2)",
 		input + "Residual {\nConv(w=3, h=3, n=3)\n}",

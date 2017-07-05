@@ -72,6 +72,8 @@
 // and sx and sy set the pool stride.
 // If a stride is not specified, it will be defaulted to
 // the corresponding span for that dimension.
+// If the width or height is not specified, it defaults to
+// the corresponding dimension of the input.
 // Max-pooling layers drop partial pools.
 //
 // The MeanPool block defines a mean-pooling layer and

@@ -237,9 +237,6 @@ func PoolCreator(name string) Creator {
 		if err := onlyTheseAttrs(attr, "w", "h", "sx", "sy"); err != nil {
 			return nil, err
 		}
-		if err := hasAllAttrs(attr, "w", "h"); err != nil {
-			return nil, err
-		}
 		if err := validInt(attr, 1, "w", "h", "sx", "sy"); err != nil {
 			return nil, err
 		}
@@ -249,6 +246,12 @@ func PoolCreator(name string) Creator {
 			Height:  int(attr["h"]),
 			StrideX: int(attr["sx"]),
 			StrideY: int(attr["sy"]),
+		}
+		if res.Width == 0 {
+			res.Width = in.Width
+		}
+		if res.Height == 0 {
+			res.Height = in.Height
 		}
 		if res.StrideX == 0 {
 			res.StrideX = res.Width
